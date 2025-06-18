@@ -69,6 +69,7 @@ services:
     container_name: spark-master
     environment:
       - SPARK_MODE=master
+      - HOME=/tmp
     ports:
       - "7077:7077"
       - "8080:8080"
@@ -81,6 +82,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
+      - HOME=/tmp
     depends_on:
       - spark-master
     networks:
@@ -92,8 +94,27 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
+      - HOME=/tmp
     depends_on:
       - spark-master
+    networks:
+      - my_network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - my_network
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
     networks:
       - my_network
 

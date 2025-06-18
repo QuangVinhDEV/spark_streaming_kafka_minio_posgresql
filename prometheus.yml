@@ -1,0 +1,8 @@
+scape_config:
+  - job_name: 'spark'
+    static_configs:
+      - targets: ['spark-master:8080', 'spark-worker-1:8080', 'spark-worker-2:8080']
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+  

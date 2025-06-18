@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, from_unixtime
+from pyspark.sql.functions import from_json, col, from_unixtime, length, trim
 from pyspark.sql.types import StructType, StringType, DoubleType, TimestampType, LongType
 import os
 
@@ -68,6 +68,24 @@ print("JSON parsed\n")
 # Convert timestamp to readable format
 json_df = json_df.withColumn("timestamp", from_unixtime(col("timestamp")).cast(TimestampType()))
 
+# select validation layers
+validated_df = json_df \
+    .filter(
+        col("user_id").isNotNull() &
+        col("timestamp").isNotNull() &
+        col("sentiment").isNotNull() &
+        col("message").isNotNull()
+    ) \
+    .filter(
+        col("sentiment").isin("positive", "negative", "neutral")
+    ) \
+    .filter(
+        (length(trim(col("message"))) > 3) &                     
+        (col("message").rlike("^[a-zA-Z0-9\\s\\.,!?'-]+$"))      
+    ) \
+    .filter(
+        col("user_id").rlike("^[a-zA-Z0-9_]+$")                
+    )
 
 json_df.writeStream \
     .format("console") \
@@ -75,33 +93,33 @@ json_df.writeStream \
     .start() \
     .awaitTermination()
 # Write to MinIO
-# print("💾 Writing stream to MinIO (Parquet)...")
-# print(f"💾 Writing to s3a://{MINIO_BUCKET}/processed/")
-# minio_sink = json_df.writeStream \
-#     .format("parquet") \
-#     .option("path", f"s3a://{MINIO_BUCKET}/processed/") \
-#     .option("checkpointLocation", f"s3a://{MINIO_BUCKET}/checkpoints/") \
-#     .option("failOnDataLoss", "false") \
-#     .outputMode("append") \
-#     .trigger(processingTime='10 seconds') \
-#     .start()
-# print("💡 MinIO Sink isActive:", minio_sink.isActive)
-# print("Stream to MinIO started\n")
+print("💾 Writing stream to MinIO (Parquet)...")
+print(f"💾 Writing to s3a://{MINIO_BUCKET}/processed/")
+minio_sink = json_df.writeStream \
+    .format("parquet") \
+    .option("path", f"s3a://{MINIO_BUCKET}/processed/") \
+    .option("checkpointLocation", f"s3a://{MINIO_BUCKET}/checkpoints/") \
+    .option("failOnDataLoss", "false") \
+    .outputMode("append") \
+    .trigger(processingTime='10 seconds') \
+    .start()
+print("💡 MinIO Sink isActive:", minio_sink.isActive)
+print("Stream to MinIO started\n")
 
 # Write to PostgreSQL
-# print("Writing stream to PostgreSQL table 'stream_metrics'...")
-# postgres_sink = json_df.writeStream \
-#     .foreachBatch(lambda df, epochId: df.write \
-#         .format('jdbc') \
-#         .option("url", POSTGRES_URL) \
-#         .option("dbtable", "stream_metrics") \
-#         .option("user", POSTGRES_USER) \
-#         .option("password", POSTGRES_PASSWORD) \
-#         .mode("append") \
-#         .save()) \
-#     .outputMode("update") \
-#     .start()
-# print("Stream to PostgreSQL started\n")
+print("Writing stream to PostgreSQL table 'stream_metrics'...")
+postgres_sink = json_df.writeStream \
+    .foreachBatch(lambda df, epochId: df.write \
+        .format('jdbc') \
+        .option("url", POSTGRES_URL) \
+        .option("dbtable", "stream_metrics") \
+        .option("user", POSTGRES_USER) \
+        .option("password", POSTGRES_PASSWORD) \
+        .mode("append") \
+        .save()) \
+    .outputMode("update") \
+    .start()
+print("Stream to PostgreSQL started\n")
 
 # Await termination
 print("🚀 Streaming jobs running. Awaiting termination...\n")
