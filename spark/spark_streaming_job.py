@@ -87,7 +87,7 @@ validated_df = json_df \
         col("user_id").rlike("^[a-zA-Z0-9_]+$")                
     )
 
-json_df.writeStream \
+validated_df.writeStream \
     .format("console") \
     .outputMode("append") \
     .start() \
@@ -108,7 +108,7 @@ print("Stream to MinIO started\n")
 
 # Write to PostgreSQL
 print("Writing stream to PostgreSQL table 'stream_metrics'...")
-postgres_sink = json_df.writeStream \
+postgres_sink = validated_df.writeStream \
     .foreachBatch(lambda df, epochId: df.write \
         .format('jdbc') \
         .option("url", POSTGRES_URL) \

@@ -28,7 +28,7 @@ with DAG(
 
     spark_to_minio = DummyOperator(task_id='spark_to_minio')
     minio_to_postgres = DummyOperator(task_id='minio_to_postgres')
-    validate_data_task = DummyOperator(task_id='validate_data_task')  # 👈 Thêm bước này
+
     end = DummyOperator(task_id='end')
 
-    start >> kafka_to_spark >> spark_to_minio >> minio_to_postgres >> validate_data_task >> end
+    start >> kafka_to_spark >> spark_to_minio >> minio_to_postgres >> end
