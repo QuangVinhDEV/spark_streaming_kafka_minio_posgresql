@@ -8,7 +8,7 @@ def read_data():
     try:
         # Connect to PostgreSQL
         conn = psycopg2.connect(
-            dbname="streaming_db",
+            dbname="stream_metrics",
             user="postgres",
             password="poastgres",
             host="postgres",

@@ -23,7 +23,7 @@ print(f"POSTGRES_URL       = {POSTGRES_URL}")
 print("=====================\n")
 
 # Spark Session initialization
-print("🔧 Initializing SparkSession...")
+print("Initializing SparkSession...")
 spark = SparkSession.builder \
     .appName("Spark Streaming Job") \
     .config("spark.hadoop.fs.s3a.endpoint", MINIO_ENDPOINT) \
@@ -93,8 +93,8 @@ validated_df.writeStream \
     .start() \
     .awaitTermination()
 # Write to MinIO
-print("💾 Writing stream to MinIO (Parquet)...")
-print(f"💾 Writing to s3a://{MINIO_BUCKET}/processed/")
+print("Writing stream to MinIO (Parquet)...")
+print(f"Writing to s3a://{MINIO_BUCKET}/processed/")
 minio_sink = json_df.writeStream \
     .format("parquet") \
     .option("path", f"s3a://{MINIO_BUCKET}/processed/") \
@@ -103,7 +103,7 @@ minio_sink = json_df.writeStream \
     .outputMode("append") \
     .trigger(processingTime='10 seconds') \
     .start()
-print("💡 MinIO Sink isActive:", minio_sink.isActive)
+print("MinIO Sink isActive:", minio_sink.isActive)
 print("Stream to MinIO started\n")
 
 # Write to PostgreSQL
@@ -122,5 +122,5 @@ postgres_sink = validated_df.writeStream \
 print("Stream to PostgreSQL started\n")
 
 # Await termination
-print("🚀 Streaming jobs running. Awaiting termination...\n")
+print("Streaming jobs running. Awaiting termination...\n")
 spark.streams.awaitAnyTermination()
